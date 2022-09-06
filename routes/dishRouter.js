@@ -1,60 +1,84 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
+
+const Dishes = require('../models/dishes')
 
 const dishRouter = express.Router()
-// const dishRouter2 = express.Router()
 
 dishRouter.use(bodyParser.json())
-// dishRouter2.use(bodyParser.json())
 
 dishRouter.route('/')
-.all((req,res,next) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/plain')
-    next()
-    // whatever method comes in to the /dishes endpoint, this block would first of all
-    // be executed and whatever data that comes in would be passed as parameters
-    // to the corresponding method (get, post, put or delete) as specified in the methods below
-})
 .get((req, res, next) => {
-    res.end('Will send all the dishes to you')
+    Dishes.find({})
+    .then((dishes) => {
+        // if promise fulfilled
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(dishes) // takes the dishes data and send it to client in json format
+    }, (err) => next(err))  // handling error
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .post((req, res, next) => {
-    res.end('Will add the dish: ' + req.body.name + ' with details: '
-    + req.body.description)
+    Dishes.create(req.body)
+    .then((dish) => {
+        // if promise fulfilled
+        console.log('Created Dish: ', dish)
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(dish) // show the newly added dish to the client
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .put((req, res, next) => {
     res.statusCode = 403
     res.end('PUT operation not supported on /dishes')
 })
 .delete((req, res, next) => {
-    res.end("Deleting all the dishes")
+    Dishes.remove({})
+    .then((resp) => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(resp)
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err))
 })
 
 dishRouter.route('/:dishId')
-.all((req,res,next) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/plain')
-    next()
-    // whatever method comes in to the /dishes endpoint, this block would first of all
-    // be executed and whatever data that comes in would be passed as parameters
-    // to the corresponding method (get, post, put or delete) as specified in the methods below
-})
 .get((req, res, next) => {
-    res.end('Will send details of the dish: ' + req.params.dishId +
-    ' to you')
+    Dishes.findById(req.params.dishId)
+    .then((dish) => {
+        // if promise fulfilled
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(dish) // show the specified dish to the client
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .post((req, res, next) => {
     res.statusCode = 403
     res.end('POST operation not supported on /dishes/' + req.params.dishId)
 })
 .put((req, res, next) => {
-    res.write('Updating the dish: ' + req.params.dishId + '\n')
-    res.end('Will update the dish: ' + req.body.name +
-    ' with details ' + req.body.description)
+    Dishes.findByIdAndUpdate(req.params.dishId, {
+        $set: req.body
+    }, { new: true })
+    .then((dish) => {
+        // if promise fulfilled
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(dish) // show the updated dish to the client
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .delete((req, res, next) => {
-    res.end("Deleting dish: " + req.params.dishId)
+    Dishes.findByIdAndRemove(req.params.dishId)
+    .then((resp) => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(resp)
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err))
 })
 
 

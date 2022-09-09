@@ -34,6 +34,42 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+function auth(req, res, next) {
+  console.log(req.headers)
+
+  var authHeader = req.headers.authorization
+
+  if (!authHeader) { // if auth is not included in the user request
+    var err = new Error('You are not authenticated')
+
+    res.setHeader('WWW.Authenticate', 'Basic')
+    err.status = 401
+    return next(err) // sent to the overall error handler
+  }
+
+  var auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':')
+  // the auth in the request comes in the form 'Basic Token', so the first split
+  // in the line above gets the base64 encoded token that comes with the request
+  // and the second split seperate the username from the password since they are 
+  // both encoded inside the token
+  var username = auth[0]
+  var password = auth[1]
+
+  if (username === 'admin' && password === 'password') {
+    next() // pass the flow to the next middleware
+  }
+  else {
+    var err = new Error('You are not authenticated')
+
+    res.setHeader('WWW.Authenticate', 'Basic')
+    err.status = 401
+    return next(err) // sent to the overall error handler
+  }
+}
+
+app.use(auth)
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);

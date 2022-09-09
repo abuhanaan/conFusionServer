@@ -1,59 +1,86 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
+
+const Promotions = require('../models/promotions')
 
 const promoRouter = express.Router()
 
 promoRouter.use(bodyParser.json())
 
 promoRouter.route('/')
-.all((req,res,next) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/plain')
-    next()
-    // whatever method comes in to the /promotions endpoint, this block would first of all
-    // be executed and whatever data that comes in would be passed as parameters
-    // to the corresponding method (get, post, put or delete) as specified in the methods below
-})
 .get((req, res, next) => {
-    res.end('Will send all the promos to you')
+    Promotions.find({})
+    .then((promotions) => {
+        // if promise fulfilled
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(promotions) // takes the promotions data and send it to client in json format
+    }, (err) => next(err))  // handling error
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .post((req, res, next) => {
-    res.end('Will add the promo: ' + req.body.name + ' with details: '
-    + req.body.description)
+    Promotions.create(req.body)
+    .then((promo) => {
+        // if promise fulfilled
+        console.log('Created Promo: ', promo)
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(promo) // show the newly added promo to the client
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .put((req, res, next) => {
     res.statusCode = 403
     res.end('PUT operation not supported on /promotions')
 })
 .delete((req, res, next) => {
-    res.end("Deleting all the promotions")
+    Promotions.remove({})
+    .then((resp) => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(resp)
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err))
 })
 
 promoRouter.route('/:promoId')
-.all((req,res,next) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/plain')
-    next()
-    // whatever method comes in to the /dishes endpoint, this block would first of all
-    // be executed and whatever data that comes in would be passed as parameters
-    // to the corresponding method (get, post, put or delete) as specified in the methods below
-})
 .get((req, res, next) => {
-    res.end('Will send details of the promo: ' + req.params.promoId +
-    ' to you')
+    Promotions.findById(req.params.promoId)
+    .then((promo) => {
+        // if promise fulfilled
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(promo) // show the specified promo to the client
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .post((req, res, next) => {
     res.statusCode = 403
     res.end('POST operation not supported on /promotions/' + req.params.promoId)
 })
 .put((req, res, next) => {
-    res.write('Updating the promo: ' + req.params.promoId + '\n')
-    res.end('Will update the promo: ' + req.body.name +
-    ' with details ' + req.body.description)
+    Promotions.findByIdAndUpdate(req.params.promoId, {
+        $set: req.body
+    }, { new: true })
+    .then((promo) => {
+        // if promise fulfilled
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(promo) // show the updated promo to the client
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err)) // if any error, send it back to the overall error handler
 })
 .delete((req, res, next) => {
-    res.end("Deleting promo: " + req.params.promoId)
+    Promotions.findByIdAndRemove(req.params.promoId)
+    .then((resp) => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(resp)
+    }, (err) => next(err))  // handling error)
+    .catch((err) => next(err))
 })
+
 
 
 module.exports = promoRouter

@@ -4,13 +4,33 @@ const User = require('../models/user')
 var passport = require('passport')
 const authenticate = require('../authenticate');
 
+const Users = require('../models/user')
+
 var router = express.Router();
 router.use(bodyParser.json())
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function(req, res, next) {
+  // res.send('respond with a resource');
+  Users.find({}, (err, users) => {
+    if (err) {
+      return next(err)
+    }
+    else {
+      res.status(200);
+      res.setHeader('Content-type', 'application/json');
+      res.json(users);
+    }
+  })
+})
+//   .then((users) => {
+//     // if promise fulfilled
+//     res.statusCode = 200
+//     res.setHeader('Content-Type', 'application/json')
+//     res.json(users) // takes the users data and send it to client in json format
+// }, (err) => next(err))  // handling error
+// .catch((err) => next(err)) // if any error, send it back to the overall error handler
+// });
 
 router.post('/signup', function(req, res, next) {
   User.register(new User({username: req.body.username}), req.body.password, 

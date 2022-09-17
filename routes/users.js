@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const User = require('../models/user')
 var passport = require('passport')
 const authenticate = require('../authenticate');
+const cors = require('./cors')
 
 const Users = require('../models/user')
 
@@ -10,7 +11,7 @@ var router = express.Router();
 router.use(bodyParser.json())
 
 /* GET users listing. */
-router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function(req, res, next) {
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, function(req, res, next) {
   // res.send('respond with a resource');
   Users.find({}, (err, users) => {
     if (err) {
@@ -32,7 +33,7 @@ router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function(req,
 // .catch((err) => next(err)) // if any error, send it back to the overall error handler
 // });
 
-router.post('/signup', function(req, res, next) {
+router.post('/signup', cors.corsWithOptions,  function(req, res, next) {
   User.register(new User({username: req.body.username}), req.body.password, 
   (err, user) => {
     if (err) {
@@ -63,7 +64,7 @@ router.post('/signup', function(req, res, next) {
   )
 })
 
-router.post('/login', passport.authenticate('local', {session: false}), (req, res) => {
+router.post('/login', cors.corsWithOptions,  passport.authenticate('local', {session: false}), (req, res) => {
   
   var token = authenticate.getToken({_id: req.user._id}) // creates a token at login point
   res.statusCode = 200
@@ -71,7 +72,7 @@ router.post('/login', passport.authenticate('local', {session: false}), (req, re
   res.json({success: true, token: token, status: 'You are Successfully logged in!'})
 })
 
-router.get('/logout', (req, res, next) => {
+router.get('/logout', cors.corsWithOptions,  (req, res, next) => {
   if (req.session) { // affirming that session already exist before attempting to logout
     req.session.destroy() // clear session info on server side
     res.clearCookie('session-id') // clears cookie info on the client side

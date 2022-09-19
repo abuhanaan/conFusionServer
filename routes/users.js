@@ -85,4 +85,18 @@ router.get('/logout', cors.corsWithOptions,  (req, res, next) => {
   }
 })
 
+// Handling User Account Creation and Login with FB
+router.get('/facebook/token', passport.authenticate('facebook-token'), (req, res) => {
+  if (req.user) {
+    // at login point, client sends an access token to the server which then uses it
+    //  to lookup the user (profileId) on FB, and cross checks if the user exists
+    // on the express server, if not creates a new account for the FB user
+    // the line below then creates a JWT for the user's authentication on the express server
+    var token = authenticate.getToken({_id: req.user._id}) 
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'application/json')
+    res.json({success: true, token: token, status: 'You are Successfully logged in!'})
+  }
+})
+
 module.exports = router;
